@@ -206,6 +206,8 @@ class TheoryChorusComposer:
                 pitch = min(
                     (value for value in candidates if 64 <= value <= 88),
                     key=lambda value: abs(value - previous_pitch),
+
+
                 )
 
                 if category == "same_pitch" and bar in (1, 5) and local_index in (1, 2, 3):

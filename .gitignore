@@ -20,16 +20,16 @@ tmp/
 *.m4a
 
 # Downloaded model weights and caches (large; provide separately)
-models/**/*.pt
-models/**/*.pth
-models/**/*.bin
-models/*.pt
-models/*.pth
-models/*.bin
-models/audio-separator/
-models/faster-whisper/
-models/transformers/
-models/torch/
+**/models/**/*.pt
+**/models/**/*.pth
+**/models/**/*.bin
+**/models/*.pt
+**/models/*.pth
+**/models/*.bin
+**/models/audio-separator/
+**/models/faster-whisper/
+**/models/transformers/
+**/models/torch/
 
 # Local secrets and OS files
 .env*

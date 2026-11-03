@@ -134,40 +134,33 @@ PianoFlowはGitHubからソースコードを取得し、自分のWindows PC上�
    cd pianoflow
    ```
 
-2. MIDIを読み込んで編集・試聴する場合は、`PianoFlow_v126.html`をChromeまたはEdgeで開きます。
-3. Windowsランチャーから一連の機能を使う場合は、`PianoFlow Windows版.bat`を起動します。MP4出力にはローカルPython環境とFFmpegが必要です。
+2. MIDIを読み込んで編集・試聴する場合は、`desktop/PianoFlow_v126.html`をChromeまたはEdgeで開きます。
+3. Windowsランチャーから一連の機能を使う場合は、`desktop/PianoFlow Windows版.bat`を起動します。MP4出力にはローカルPython環境とFFmpegが必要です。
 
 ### 音声からのAI解析
 
-1. Python 3.8系と3.10系でAI解析用の仮想環境を用意し、依存パッケージと音源分離・音程推定モデルを準備します。起動スクリプトは`.venv-pianoflow`と`.venv-pianoflow-hq`を参照します。これらの仮想環境自体はGitHubへ登録せず、PC上に構築します。
+1. Python 3.8系と3.10系でAI解析用の仮想環境を用意し、依存パッケージと音源分離・音程推定モデルを準備します。起動スクリプトは`desktop/.venv-pianoflow`と`desktop/.venv-pianoflow-hq`を参照します。これらの仮想環境自体はGitHubへ登録せず、PC上に構築します。
 2. FFmpegをインストールし、コマンドから実行できるようにします。
-3. CPUで解析する場合は`PianoFlow AI解析版.bat`を起動し、音声を選択して解析します。faster-whisperはCUDAが使えない環境ではCPUへ切り替わります。
-4. GPU推論を使う場合は、対応するNVIDIA GPU・CUDA対応PyTorch環境とTCNの学習済み重みを準備して`PianoFlow AI GPU版.bat`を起動します。スクリプトがCUDA演算とモデルを事前確認し、確認に失敗した場合は解析を開始しません。
+3. CPUで解析する場合は`desktop/PianoFlow AI解析版.bat`を起動し、音声を選択して解析します。faster-whisperはCUDAが使えない環境ではCPUへ切り替わります。
+4. GPU推論を使う場合は、対応するNVIDIA GPU・CUDA対応PyTorch環境とTCNの学習済み重みを準備して`desktop/PianoFlow AI GPU版.bat`を起動します。スクリプトがCUDA演算とモデルを事前確認し、確認に失敗した場合は解析を開始しません。
 
-初回実行時は、音声認識や音源分離のモデルを取得するためインターネット接続が必要な場合があります。取得後の音声解析はローカルPCで行います。学習用音源、正解MIDI、解析キャッシュ、Python仮想環境は、サイズや権利の都合上、ソースコードと分けて管理します。TCN重みが必要なモードでは、`models/learning-v431/`に音程・装飾・境界の3つのチェックポイントを配置します。
+初回実行時は、音声認識や音源分離のモデルを取得するためインターネット接続が必要な場合があります。取得後の音声解析はローカルPCで行います。学習用音源、正解MIDI、解析キャッシュ、Python仮想環境は、サイズや権利の都合上、ソースコードと分けて管理します。TCN重みが必要なモードでは、`desktop/models/learning-v431/`に音程・装飾・境界の3つのチェックポイントを配置します。
 
 ## リポジトリ構成
 
 ```text
 .
-├── index.html                 デモへの転送ページ
-├── PianoFlow_v126.html        MIDI編集・動画作成
-├── PianoFlow_AI*.html         音声AI解析画面
-├── pianoflow_server.py        ローカル処理・動画出力
-├── ai_melody.py・hq_*.py      音声解析処理
-├── learning_v*.py             学習・評価コード
-├── apply_learning_v431_dataset.py・pianoflow_gpu_*.py  TCN推論
-├── piano_samples_embedded.js  MIDIアプリ用の埋め込みピアノ音源
-├── piano-samples/             ピアノサンプルMP3（30ファイル）
-├── assets/                    操作ガイド動画
-├── demo/                      GitHub Pages用MIDIデモ
-│   └── piano_samples_embedded.js  デモ単体で動かすための同一コピー
-├── THIRD_PARTY_NOTICES.md     ピアノ音源の出典・ライセンス
-├── PianoFlow*.bat・*.ps1      Windows起動用
-└── models/README.md           学習済み重みの配置説明（重み本体は別途準備）
+├── index.html               公開デモへの転送
+├── demo/                    ブラウザーで操作できるデモ
+├── desktop/                 Windowsローカル版・音声AI・学習コード・音源
+├── assets/                  操作ガイド動画などの静的素材
+├── docs/                    配布ファイルの説明
+└── THIRD_PARTY_NOTICES.md    音源クレジット・ライセンス
 ```
 
-`piano_samples_embedded.js` は、ルートのMIDIアプリ用と `demo/` の静的デモ用に同じ内容を置いています。デモを別パスから開いても相対パスで音源を読み込めるようにするための意図的な重複です。
+ローカル版のHTML・Python・起動ファイルは `desktop/` にまとめています。ピアノMP3サンプル30個は `desktop/piano-samples/`、モデルの配置説明は `desktop/models/README.md` にあります。
+
+埋め込みピアノ音源は `desktop/piano_samples_embedded.js` と `demo/piano_samples_embedded.js` に同じ内容を保持し、それぞれ単独で読み込めるようにしています。配布内容の詳細は[配布ファイル一覧](docs/UPLOAD_MANIFEST.md)を参照してください。
 
 ## 音源クレジット
 
