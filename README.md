@@ -25,19 +25,85 @@ https://github.com/user-attachments/assets/21d18149-cc3b-440e-841d-f3dacbfa32a5
 - 編集設定の保存と、音声付きピアノ動画の出力
 - 音声からのボーカル分離、歌詞文字起こし、メロディMIDI推定
 
-## 技術選定
+## 技術選定・アーキテクチャ
 
-| 処理 | 技術 | 用途 | 選定理由 |
-| --- | --- | --- | --- |
-| MIDI動画 | HTML・CSS・JavaScript | 画面と編集操作 | ブラウザーだけで動かすため。 |
-| MIDI動画 | Standard MIDI File読み込み | 音符・テンポの取得 | MIDIの時刻と音高を保つため。 |
-| MIDI動画 | Canvas 2D | バー・鍵盤・歌詞の描画 | 再生に合わせて画面を描くため。 |
-| MIDI動画 | Web Audio API・ピアノ音源 | 演奏音の再生 | MIDIと音を同期するため。 |
-| MIDI動画 | `MediaRecorder`・`canvas.captureStream()` | 映像・音声の記録 | 再生内容を動画にするため。 |
-| 共通 | Python HTTPサーバー・FFmpeg | 音声処理・MP4出力 | 長時間処理と動画変換を行うため。 |
-| MIDI動画 | `localStorage` | 編集設定の保存 | 同じブラウザーで編集を再開するため。 |
+### MIDIから動画へ
 
-### 音声AIの技術と採用理由
+MIDIの音符イベントを読み込んだ後、編集画面・ピアノ音・動画を同じ再生時刻から作ります。音符を音声から再推定しないため、入力MIDIの音高やタイミングをそのまま映像へ反映できます。
+
+```mermaid
+flowchart LR
+  subgraph Browser[ブラウザー — 読み込み・編集・描画]
+    M[MIDIファイル] --> P[SMFパーサー<br/>音符・tick・tempo]
+    P --> N[ノートイベント<br/>再生時刻に変換]
+    N --> S[編集設定<br/>色・歌詞・ドレミ]
+    S --> C[Canvas 2D<br/>各フレームを描画]
+    N --> A[Web Audio API<br/>ピアノ音を時刻指定で再生]
+    S --> L[localStorage<br/>編集設定を保存]
+    C --> V[WebCodecs<br/>固定時刻で映像フレームを生成]
+    A --> W[ピアノ音声 WAV]
+  end
+  subgraph Local[PC内 — MP4化]
+    V --> X[ローカル Python サーバー]
+    W --> X
+    X --> F[FFmpeg<br/>H.264 + AAC]
+    F --> O[完成 MP4]
+  end
+  classDef source fill:#172554,stroke:#60a5fa,color:#eff6ff,stroke-width:1.5px;
+  classDef process fill:#111827,stroke:#64748b,color:#f8fafc;
+  classDef output fill:#052e2b,stroke:#2dd4bf,color:#f0fdfa,stroke-width:1.5px;
+  class M,O source;
+  class P,N,S,C,A,L,V,W,X,F process;
+```
+
+| 技術 | 採用理由 |
+| --- | --- |
+| HTML・CSS・JavaScript | MIDIの読み込み、歌詞入力、再生、見た目の編集を一画面でつなぐため。編集操作のたびに別ツールへ書き出す手間をなくし、プレビューへすぐ反映できます。 |
+| 独自のStandard MIDI File（SMF）パーサー | MIDIは音高だけでなくtickとテンポ情報で演奏時刻を表します。それらをノートイベントへ変換して保持し、再生・表示・書き出しの間でタイミングがずれにくい土台にするためです。 |
+| Canvas 2D | ピアノロールは平面上の図形描画が中心です。フレームごとにノーツ、鍵盤、文字を直接描けるため、必要な表現を保ちながら3D/WebGLの描画基盤を増やさずに済みます。 |
+| Web Audio API＋Salamander Grand Pianoサンプル | MIDIのノート時刻に合わせて発音をスケジュールでき、単純な電子発振ではなく録音されたピアノ音をプレビューと動画音声に使えるためです。 |
+| WebCodecs（固定fps） | 実時間の画面録画に依存せず、各フレームへ明示的な時刻を付けて映像化するためです。再生負荷によるフレーム間隔の揺れを避けやすくし、非対応時は固定30fpsの互換経路へ切り替えます。 |
+| ローカルPythonサーバー＋FFmpeg | ブラウザーで生成した映像とピアノ音声をPC内で結合し、H.264/AACのMP4として検証・保存するためです。変換を外部サービスに依存せず、手元の音源をアップロードしない構成にできます。 |
+| `localStorage` | 編集設定は利用者ごと・端末ごとに保持すればよく、サーバーやアカウントを介さず保存・復元できるためです。 |
+
+### 音声からメロディMIDIへ
+
+こちらはMIDI編集とは別の解析経路です。ボーカルを取り出し、歌詞の時刻を大枠の手掛かりにしながら複数の音高候補と音響特徴を組み合わせ、最後にノートイベントとしてMIDIへ書き出します。
+
+```mermaid
+flowchart LR
+  subgraph Input[入力]
+    A[音声ファイル]
+  end
+  subgraph Frontend[解析しやすい音へ整える]
+    A --> B[FFmpeg<br/>形式・サンプルレートを統一]
+    B --> C[RoFormer系ボーカル分離<br/>メイン声・コーラス・残響を整理]
+  end
+  subgraph Evidence[別々の根拠を抽出]
+    C --> D[faster-whisper<br/>歌詞と単語時刻]
+    C --> E[RMVPE / CREPE / WORLD / pYIN<br/>音高候補・信頼度]
+    C --> H[フレーム音響特徴<br/>音量・スペクトル・発声変化]
+  end
+  subgraph Decode[標準解析 — 候補を組み合わせる]
+    D --> F[v39 標準解析<br/>歌詞時刻＋音響根拠で復号]
+    E --> F
+    H --> F
+    F --> G[推定MIDI]
+  end
+  subgraph Learned[学習モデル解析 — 音響特徴から推定]
+    C --> K[音響特徴＋音響prior]
+    K --> I[v4.3.1<br/>音程・装飾・境界モデル]
+    I --> J[推定MIDI]
+  end
+  G -. 読み込み .-> N[PianoFlow MIDI編集・動画作成]
+  J -. 読み込み .-> N
+  classDef source fill:#172554,stroke:#60a5fa,color:#eff6ff,stroke-width:1.5px;
+  classDef process fill:#111827,stroke:#64748b,color:#f8fafc;
+  classDef output fill:#052e2b,stroke:#2dd4bf,color:#f0fdfa,stroke-width:1.5px;
+  class A,G,J source;
+  class N output;
+  class B,C,D,E,H,F,I process;
+```
 
 | 技術 | 採用理由 |
 | --- | --- |
@@ -47,31 +113,7 @@ https://github.com/user-attachments/assets/21d18149-cc3b-440e-841d-f3dacbfa32a5
 | 歌詞時刻＋音量・スペクトル・子音／母音特徴 | 歌詞時刻は「どの語・フレーズ付近か」を狭め、音響特徴は実際の発声開始、再発音、音高変化を確かめます。歌詞だけでは音符の細かな境界が決まらず、音響だけでは語の位置を見失いやすいため、両者を異なる役割で組み合わせます。 |
 | 拡張時間畳み込み＋Transformer Encoder（PyTorch） | 1フレームの値だけで音程や境界を決めず、前後の変化も見て判定するためです。拡張Conv1Dで短い発声変化から長めの音列パターンまで捉え、Transformer Encoderで離れたフレームの関係も扱います。全区間を参照できるオフライン解析なので、未来側の文脈も利用できます。 |
 
-### MIDIからピアノ動画を作る流れ
-
-MIDIの音符とテンポを読み、バー・鍵盤を描画して音と同期した動画にします。歌詞は音符へ割り当て、バーから調整できます。
-
-```text
-MIDI → 音符・テンポを読み込む → バー・鍵盤・歌詞を描画
-     → Web Audio APIで演奏 → 映像と音声を記録 → MP4を出力
-```
-
-### 音声からメロディMIDIを作る流れ
-
-歌詞認識で文字と時刻を得て、音響特徴から音程を推定します。歌詞の時刻は境界候補に使い、音程は音声から判断します。
-
-```text
-音声入力 → FFmpegで解析用音声へ変換 → ボーカルを分離
-         → 歌詞と単語時刻を認識 → 音響特徴から音程候補を抽出
-         → 歌詞境界・母音・子音・音量・スペクトル変化から音符境界を調整
-         → ノート列をMIDI出力 → PianoFlowで試聴・動画化
-```
-
-通常解析（v39）は複数の音程推定器を組み合わせます。TCN解析（v4.3.1）は別経路で、v39の後段に追加する構成ではありません。
-
 どちらの解析経路で得たMIDIも、MIDI編集画面へ読み込んで再生・編集・動画化できます。AI解析と動画作成は別の処理ですが、MIDIファイルが両者をつなぐ受け渡し形式です。
-
-### v4.3.1のモデル構造と学習方法
 
 v4.3.1は純粋なTCNではなく、**拡張時間畳み込み＋Transformer Encoderのハイブリッド**です。また、音響候補を初期予測として残し、ゼロ初期化したゲート付き残差で補正する構造です。これは既存候補を無条件に捨てず、学習モデルに誤りや不足を修正させるための設計です。時系列データとの適合性を理由に選んでおり、TCN単体や他方式より高精度だと比較実証したものではありません。
 
