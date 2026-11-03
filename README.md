@@ -16,10 +16,6 @@ https://github.com/user-attachments/assets/21d18149-cc3b-440e-841d-f3dacbfa32a5
 
 動画では、MIDIの読み込みと再生、バーの色変更、歌詞の割り当て、発光タイミングの調整、動画保存を紹介しています。
 
-## 音源クレジット
-
-ピアノ音源には、Alexander Holm作「Salamander Grand Piano V3」（CC BY 3.0）のTone.js配布サンプルを使用しています。サンプルはMP3およびオフライン再生用の埋め込みデータとして同梱し、再生時に音程を移調します。詳しい出典・表示は[第三者素材のクレジット](THIRD_PARTY_NOTICES.md)を参照してください。
-
 ## 主な機能
 
 - MIDIファイルの読み込みとピアノロール再生
@@ -123,3 +119,7 @@ PianoFlowはGitHubからソースコードを取得し、自分のWindows PC上�
 ```
 
 `piano_samples_embedded.js` は、ルートのMIDIアプリ用と `demo/` の静的デモ用に同じ内容を置いています。デモを別パスから開いても相対パスで音源を読み込めるようにするための意図的な重複です。
+
+## 音源クレジット
+
+ピアノ音源には、Alexander Holm作「Salamander Grand Piano V3」（CC BY 3.0）のTone.js配布サンプルを使用しています。サンプルはMP3およびオフライン再生用の埋め込みデータとして同梱し、再生時に音程を移調します。詳しい出典・表示は[第三者素材のクレジット](THIRD_PARTY_NOTICES.md)を参照してください。
