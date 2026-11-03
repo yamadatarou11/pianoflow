@@ -10,6 +10,8 @@ PianoFlowは、MIDI音源を入力し演奏を見やすいピアノ動画にし�
 
 ## 操作動画
 
+https://github.com/user-attachments/assets/21d18149-cc3b-440e-841d-f3dacbfa32a5
+
 [操作ガイド動画（MP4）](assets/PianoFlow_使い方_ゆっくり操作ガイド.mp4)
 
 動画では、MIDIの読み込みと再生、バーの色変更、歌詞の割り当て、発光タイミングの調整、動画保存を紹介しています。
@@ -103,7 +105,7 @@ PianoFlowはGitHubからソースコードを取得し、自分のWindows PC上�
 
 ```text
 .
-├── index.html                 紹介ページ
+├── index.html                 デモへの転送ページ
 ├── PianoFlow_v126.html        MIDI編集・動画作成
 ├── PianoFlow_AI*.html         音声AI解析画面
 ├── pianoflow_server.py        ローカル処理・動画出力

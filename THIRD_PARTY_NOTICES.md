@@ -16,4 +16,4 @@ CC BY 3.0の条件に従い、作者名・作品名・出典・ライセンス�
 
 ## 操作動画のデモMIDI
 
-操作動画で使っている「DEMO SONG」のMIDIは、PianoFlowの紹介用にCodexが作成したサンプルです。制作フォルダー内に第三者のMIDIや外部ダウンロード元は見つからず、第三者の楽曲を出典として示すものではありません。動画内で鳴るピアノ音色には、上記のSalamander Grand Pianoサンプルを使用しています。
+操作動画で使っている「DEMO SONG」のMIDIは、PianoFlowの紹介用にCodexが作成したサンプルです。動画内で鳴るピアノ音色には、上記のSalamander Grand Pianoサンプルを使用しています。
