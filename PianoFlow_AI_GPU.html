@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>PianoFlow AI — ボーカルからピアノへ</title>
+  <style>
+    :root{color-scheme:dark;--bg:#000000;--panel:#141821;--line:#29303c;--text:#f4f6fa;--muted:#9ca6b5;--accent:#a99aff;--mint:#81e0c2;--danger:#ffaaa8}
+    *{box-sizing:border-box}body{margin:0;background:#000000;color:var(--text);font:15px/1.55 system-ui,"Yu Gothic UI",Meiryo,sans-serif}
+    body,body *{color:var(--text)!important}
+    main{width:min(980px,100% - 32px);margin:auto;padding:30px 0 56px}header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}.brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.02em}.logo{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(145deg,#a294ff,#66d9c2);color:#11131a;font-size:20px}.badge{padding:5px 10px;border:1px solid #49435d;border-radius:999px;color:#d3caff;font-size:12px}
+    h1{font-size:clamp(30px,5vw,48px);line-height:1.12;letter-spacing:-.04em;margin:0 0 12px}h1 span{color:var(--mint)}.intro{margin:0 0 24px;color:var(--muted);max-width:700px}.panel{border:1px solid var(--line);border-radius:18px;background:linear-gradient(150deg,#171c26,#11151d);padding:22px;box-shadow:0 18px 55px #0004;margin-top:16px}.drop{min-height:170px;border:1px dashed #50596a;border-radius:14px;background:#0e1219;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;cursor:pointer;transition:.18s}.drop:hover,.drop.drag{border-color:var(--accent);background:#171526}.drop-icon{width:46px;height:46px;border-radius:14px;background:#28233c;color:#d5ceff;display:grid;place-items:center;font-size:23px;margin:0 auto 9px}.drop strong{display:block;font-size:16px}.drop small{display:block;color:var(--muted);margin-top:5px}.filename{margin:12px 0 0;color:var(--mint);font-size:13px;overflow-wrap:anywhere}
+    button,.button{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer;transition:transform .12s,opacity .12s}.primary{background:linear-gradient(110deg,#51477f,#285e54);box-shadow:0 8px 24px #0005}.secondary{background:#252938;border:1px solid #3e4554}.danger{background:#3a2025;border:1px solid #61343c}button:hover,.button:hover{transform:translateY(-1px)}button:disabled{opacity:.42;cursor:not-allowed;transform:none}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+    .progress{height:5px;background:#252b36;border-radius:8px;overflow:hidden;margin-top:16px;display:none}.progress.show{display:block}.progress i{height:100%;width:35%;display:block;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--mint));animation:progress 1.25s ease-in-out infinite alternate}@keyframes progress{from{transform:translateX(-30%)}to{transform:translateX(220%)}}
+    .status{margin-top:12px;color:var(--muted);font-size:13px;min-height:1.5em}.status.error{color:var(--danger)}.result[hidden]{display:none}.result-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;flex-wrap:wrap}.result-head h2{margin:0;font-size:20px}.stats{display:flex;gap:8px;flex-wrap:wrap}.stat{border:1px solid #303847;border-radius:10px;padding:7px 10px;color:#d9ddec;font-size:12px}.stat b{color:var(--mint);margin-right:4px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.subpanel{border:1px solid #2b3340;border-radius:13px;background:#10141c;padding:16px;min-width:0}.subpanel h3{margin:0 0 10px;font-size:14px}.subpanel p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;color:#e1e4ec;min-height:66px}.subpanel audio{width:100%;margin-top:6px}.scroll{max-height:420px;overflow:auto;border:1px solid #2b3340;border-radius:11px;margin-top:18px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 12px;border-bottom:1px solid #252c37;white-space:nowrap}th{position:sticky;top:0;background:#1a202a;color:#afb7c5;font-size:11px}td.note{font-weight:800;color:#d6d0ff}tr:last-child td{border-bottom:0}.empty{padding:20px;color:var(--muted);text-align:center}
+    footer{color:#747f90;font-size:11px;margin-top:20px}a{color:#c9c1ff}.button[hidden]{display:none!important}.hidden-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+    @media(max-width:680px){main{width:min(100% - 22px,980px);padding-top:20px}.panel{padding:15px;border-radius:15px}.grid{grid-template-columns:1fr}.result-head{display:block}.stats{margin-top:12px}.drop{min-height:145px}.scroll{max-height:360px}header{margin-bottom:22px}}
+  </style>
+</head>
+<body>
+  <main>
+    <header><div class="brand"><span class="logo">♫</span><span>PianoFlow AI</span></div></header>
+    <h1>歌声から、<span>ピアノメロディ</span>へ。</h1>
+    <p class="intro">音声を選ぶと、メインボーカルの分離・歌詞の自動文字起こし・学習済みモデルによる単音メロディ解析を行います。結果はピアノ音で試聴し、MIDIとして保存できます。</p>
+
+    <section class="panel" aria-label="音声解析">
+      <label id="drop" class="drop" for="file">
+        <span><span class="drop-icon">↑</span><strong>音声・動画ファイルを選択</strong><small>MP3 / WAV / M4A / MP4 / MOV  ·  最大512MB</small></span>
+      </label>
+      <input id="file" class="hidden-input" type="file" accept="audio/*,video/mp4,video/quicktime,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.mov">
+      <div id="filename" class="filename" aria-live="polite">ファイル未選択</div>
+      <div class="actions"><button id="analyze" class="primary" disabled>AI解析を開始</button><button id="clear" class="secondary" disabled>クリア</button></div>
+      <div id="progress" class="progress" aria-hidden="true"><i></i></div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="result" class="panel result" hidden>
+      <div class="result-head"><h2>解析結果</h2><div class="stats"><span class="stat"><b id="note-count">0</b>音</span><span class="stat"><b id="bpm">—</b> BPM</span><span class="stat"><b id="model">—</b></span></div></div>
+      <div class="grid">
+        <section class="subpanel"><h3>分離したメインボーカル</h3><audio id="vocal" controls preload="none"></audio><a id="download-vocal" class="button secondary" href="#" download hidden style="display:inline-block;margin-top:8px;text-decoration:none">分離ボーカルを保存</a></section>
+        <section class="subpanel"><h3>音声からの文字起こし</h3><p id="lyrics">—</p></section>
+      </div>
+      <div class="actions"><button id="play-piano" class="secondary" disabled>▶ ピアノで試聴</button><button id="stop-piano" class="secondary" disabled>■ 停止</button><button id="download-midi" class="primary" disabled>MIDIをダウンロード</button></div>
+      <div class="scroll"><table><thead><tr><th>#</th><th>開始</th><th>終了</th><th>音程</th><th>鍵盤番号</th></tr></thead><tbody id="notes"></tbody></table><div id="no-notes" class="empty" hidden>ピアノ音符を検出できませんでした。</div></div>
+      <footer id="diagnostics"></footer>
+    </section>
+  </main>
+  <script>
+  (()=>{
+    const $=id=>document.getElementById(id),fileInput=$("file"),drop=$("drop"),analyze=$("analyze"),status=$("status"),notesBody=$("notes");
+    let selectedFile=null,analysis=null,audioContext=null,sampleBuffers=new Map(),activeSources=[],pianoTimer=0,gpuReady=false;
+    const SAMPLE_MAP=[["A0",21],["C1",24],["Ds1",27],["Fs1",30],["A1",33],["C2",36],["Ds2",39],["Fs2",42],["A2",45],["C3",48],["Ds3",51],["Fs3",54],["A3",57],["C4",60],["Ds4",63],["Fs4",66],["A4",69],["C5",72],["Ds5",75],["Fs5",78],["A5",81],["C6",84],["Ds6",87],["Fs6",90],["A6",93],["C7",96],["Ds7",99],["Fs7",102],["A7",105],["C8",108]];
+    const pcNames=["ド","ド♯","レ","レ♯","ミ","ファ","ファ♯","ソ","ソ♯","ラ","ラ♯","シ"],latinNames=["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
+    function setStatus(text,error=false){status.textContent=text;status.classList.toggle("error",error)}
+    async function checkGpuStatus(){try{const response=await fetch("/capabilities",{cache:"no-store"});if(!response.ok)throw new Error("GPU backend unavailable");const caps=await response.json();if(!caps.gpuMode||!caps.gpu)throw new Error("GPU backend unavailable");gpuReady=true;analyze.disabled=!selectedFile;setStatus("")}catch(error){gpuReady=false;analyze.disabled=true;setStatus("")}}
+    function fmt(value){return `${Math.max(0,Number(value)||0).toFixed(2)}秒`}
+    function noteName(midi){const n=Math.round(Number(midi)||60),pc=((n%12)+12)%12,oct=Math.floor(n/12)-1;return `${latinNames[pc]}${oct}（${pcNames[pc]}${oct}）`}
+    function chooseFile(file){if(!file)return;const supported=/\.(mp3|wav|m4a|ogg|flac|mp4|mov)$/i.test(file.name)||file.type.startsWith("audio/")||["video/mp4","video/quicktime"].includes(file.type);if(!supported){setStatus("MP3・WAV・M4A・MP4・MOVを選択してください。",true);return}if(file.size>512*1024*1024){setStatus("ファイルが512MBを超えています。",true);return}stopPiano();selectedFile=file;analysis=null;$("play-piano").disabled=true;$("filename").textContent=`${file.name} · ${(file.size/1024/1024).toFixed(1)}MB`;analyze.disabled=!gpuReady;$("clear").disabled=false;$("result").hidden=true;setStatus(gpuReady?"AI解析を開始できます。":"")}
+    fileInput.addEventListener("change",()=>chooseFile(fileInput.files[0]));
+    for(const event of ["dragenter","dragover"])drop.addEventListener(event,e=>{e.preventDefault();drop.classList.add("drag")});
+    for(const event of ["dragleave","drop"])drop.addEventListener(event,e=>{e.preventDefault();drop.classList.remove("drag")});
+    drop.addEventListener("drop",e=>chooseFile(e.dataTransfer.files[0]));
+    $("clear").onclick=()=>{stopPiano();selectedFile=null;analysis=null;fileInput.value="";$("play-piano").disabled=true;$("filename").textContent="ファイル未選択";$("clear").disabled=true;analyze.disabled=true;$("result").hidden=true;setStatus("")};
+    analyze.onclick=async()=>{
+      if(!selectedFile)return;analyze.disabled=true;$("clear").disabled=true;$("progress").classList.add("show");$("result").hidden=true;setStatus("ボーカルを分離し、音声だけから文字起こしとピアノメロディ解析を行っています。完了までこの画面を開いたままお待ちください。 ");
+      try{const response=await fetch("/analyze-ai",{method:"POST",headers:{"X-Filename":encodeURIComponent(selectedFile.name)},body:selectedFile}),body=await response.text();let payload;try{payload=JSON.parse(body)}catch{payload={error:body||`HTTP ${response.status}`}}if(!response.ok)throw new Error(payload.error||payload.message||`解析に失敗しました (HTTP ${response.status})`);if(Number(payload.analysisVersion)!==431)throw new Error("学習済み v4.3.1 モデルを使った解析結果ではありません。解析サーバーを確認してください。");analysis=payload;render(payload);setStatus("解析が完了しました。歌詞・ボーカル・ピアノメロディを確認できます。")}catch(error){setStatus(error?.message||"解析に失敗しました。",true)}finally{$("progress").classList.remove("show");analyze.disabled=!selectedFile||!gpuReady;$("clear").disabled=!selectedFile}
+    };
+    function render(result){const notes=(result.notes||[]).filter(n=>Number.isFinite(Number(n.midi))&&Number.isFinite(Number(n.start))&&Number.isFinite(Number(n.end))).sort((a,b)=>a.start-b.start);$("result").hidden=false;$("note-count").textContent=notes.length;$("bpm").textContent=Number(result.bpm)>0?Math.round(result.bpm):"—";$("model").textContent=result.diagnostics?.pitchModel?.model||"learning-v4.3.1";$("lyrics").textContent=result.transcriptText||result.transcription?.text||"音声から歌詞を認識できませんでした。";const stem=result.stems?.dryLead||result.stems?.lead||result.stems?.vocals;if(stem){$("vocal").src=stem;$("vocal").load();$("download-vocal").href=stem;$("download-vocal").hidden=false}else{$("vocal").removeAttribute("src");$("vocal").load();$("download-vocal").hidden=true}notesBody.replaceChildren();$("no-notes").hidden=notes.length>0;$("play-piano").disabled=notes.length===0;$("download-midi").disabled=notes.length===0;for(const [index,note]of notes.entries()){const tr=document.createElement("tr"),values=[String(index+1),fmt(note.start),fmt(note.end),noteName(note.midi),String(Math.round(note.midi))];for(const [i,value]of values.entries()){const td=document.createElement("td");td.textContent=value;if(i===3)td.className="note";tr.append(td)}notesBody.append(tr)}const d=result.diagnostics?.pitchModel||{};$("diagnostics").textContent=`${d.featureFrames||0}フレーム · ${d.device||"—"} · 音声のみで音程推定（正解MIDI不使用）`}
+    function nearestSample(midi){let best=SAMPLE_MAP[0],distance=Infinity;for(const sample of SAMPLE_MAP){const d=Math.abs(sample[1]-midi);if(d<distance){best=sample;distance=d}}return best}
+    async function ensureSamples(){if(!analysis)throw new Error("先に音声を解析してください。");const ns=analysis.notes||[],needed=[...new Set(ns.map(n=>nearestSample(Math.round(n.midi))[1]))];if(!audioContext)audioContext=new AudioContext();await audioContext.resume();await Promise.all(needed.filter(midi=>!sampleBuffers.has(midi)).map(async midi=>{const [name]=SAMPLE_MAP.find(item=>item[1]===midi),response=await fetch(`/piano-samples/${name}.mp3`);if(!response.ok)throw new Error(`ピアノ音源 ${name} を読み込めません。`);sampleBuffers.set(midi,await audioContext.decodeAudioData(await response.arrayBuffer()))}))}
+    $("play-piano").onclick=async()=>{try{await ensureSamples();stopPiano();const ns=analysis.notes||[],base=audioContext.currentTime+.12;for(const note of ns){const midi=Math.round(note.midi),sample=nearestSample(midi)[1],source=audioContext.createBufferSource(),gain=audioContext.createGain();source.buffer=sampleBuffers.get(sample);source.playbackRate.value=Math.pow(2,(midi-sample)/12);gain.gain.setValueAtTime(.85,base+note.start);gain.gain.setValueAtTime(.85,base+Math.max(note.start+.04,note.end));gain.gain.exponentialRampToValueAtTime(.001,base+note.end+.9);source.connect(gain).connect(audioContext.destination);source.start(base+note.start);source.stop(base+note.end+1);activeSources.push(source)}$("play-piano").disabled=true;$("stop-piano").disabled=false;const end=Math.max(...ns.map(n=>n.end),0)+1;pianoTimer=window.setTimeout(stopPiano,end*1000)}catch(error){setStatus(error.message||"ピアノ再生に失敗しました。",true)}};
+    function stopPiano(){if(pianoTimer){window.clearTimeout(pianoTimer);pianoTimer=0}for(const source of activeSources){try{source.stop()}catch{}}activeSources=[];$("play-piano").disabled=!analysis||!(analysis.notes||[]).length;$("stop-piano").disabled=true}
+    $("stop-piano").onclick=stopPiano;
+    function be32(value){return [(value>>>24)&255,(value>>>16)&255,(value>>>8)&255,value&255]}
+    function vlq(value){let n=Math.max(0,Math.floor(value)),bytes=[n&127];while((n>>=7)){bytes.unshift((n&127)|128)}return bytes}
+    function midiBytes(result){const tempo=Math.round(60000000/Math.max(40,Math.min(240,Number(result.bpm)||120))),ppqn=480,events=[{tick:0,order:0,data:[255,81,3,(tempo>>16)&255,(tempo>>8)&255,tempo&255]}];for(const note of result.notes||[]){const start=Math.max(0,Number(note.start)||0),end=Math.max(start+.04,Number(note.end)||start+.04),tick=t=>Math.round(t*ppqn*1000000/tempo),midi=Math.max(0,Math.min(127,Math.round(note.midi)));events.push({tick:tick(start),order:2,data:[144,midi,92]},{tick:tick(end),order:1,data:[128,midi,0]})}events.sort((a,b)=>a.tick-b.tick||a.order-b.order);let last=0,track=[];for(const event of events){track.push(...vlq(event.tick-last),...event.data);last=event.tick}track.push(0,255,47,0);const header=[77,84,104,100,...be32(6),0,0,0,1,1,224],trackChunk=[77,84,114,107,...be32(track.length),...track];return new Uint8Array([...header,...trackChunk])}
+    $("download-midi").onclick=()=>{if(!analysis)return;const blob=new Blob([midiBytes(analysis)],{type:"audio/midi"}),url=URL.createObjectURL(blob),a=document.createElement("a"),base=(selectedFile?.name||"PianoFlow-AI").replace(/\.[^.]+$/,"" ).replace(/[\\/:*?"<>|]+/g,"-");a.href=url;a.download=`${base}-AI-piano.mid`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+    checkGpuStatus();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# Local Python environments and caches
+.venv*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# User audio, datasets, analysis outputs, and temporary work
+dataset/
+dataset-work/
+work/
+output/
+outputs/
+tmp/
+*.wav
+*.mid
+*.midi
+*.mov
+*.mp4
+!/assets/PianoFlow_使い方_ゆっくり操作ガイド.mp4
+*.m4a
+
+# Downloaded model weights and caches (large; provide separately)
+models/**/*.pt
+models/**/*.pth
+models/**/*.bin
+models/*.pt
+models/*.pth
+models/*.bin
+models/audio-separator/
+models/faster-whisper/
+models/transformers/
+models/torch/
+
+# Local secrets and OS files
+.env*
+Thumbs.db
+desktop.ini
+.DS_Store
